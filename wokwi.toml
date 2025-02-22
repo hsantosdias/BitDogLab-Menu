@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = 'build/BitDogLab-Menu.uf2'
+elf = 'build/BitDogLab-Menu.elf'
