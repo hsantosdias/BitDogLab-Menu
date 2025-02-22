@@ -31,6 +31,9 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
     reset_usb_boot(0, 0);
 }
 
+// Número de Opções no Menu Principal - correção de erro no número de opções
+const int NUM_OPCOES_PRINCIPAL = 4;
+
 // Estrutura do OLED
 ssd1306_t ssd;
 
@@ -86,12 +89,12 @@ Menu submenu_configuracoes[] = {
 };
 
 
-// Menu Principal
+// Menu Principal - correção de erro no número de submenus
 Menu menu_principal[] = {
-  {"Info Ambiental", submenu_monitoramento, 4},
-  {"GeoLocalizacao", submenu_navegacao, 4},
-  {"Alert Mensagems", submenu_alertas, 4},
-  {"Config Sistema", submenu_configuracoes, 4}
+  {"Info Ambiental", submenu_monitoramento, 3},
+  {"GeoLocalizacao", submenu_navegacao, 2},
+  {"Alert Mensagems", submenu_alertas, 2},
+  {"Config Sistema", submenu_configuracoes, 3}
 };
 
 
@@ -212,40 +215,17 @@ void navegar_menu() {
 }
 
 
-/*
-// Navegação no Menu
-void navegar_menu() {
-    adc_select_input(1);
-    uint16_t adc_value_y = adc_read();
-
-    if (adc_value_y > 3000) {
-        opcao_atual = (opcao_atual + 1) % num_opcoes;
-    }
-    if (adc_value_y < 1000) {
-        opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
-    }
-    if (!gpio_get(JOYSTICK_PB)) {
-        if (menu_atual[opcao_atual].submenus) {
-            menu_atual = menu_atual[opcao_atual].submenus;
-            num_opcoes = menu_atual[0].num_submenus;
-            opcao_atual = 0;
-        } else {
-            opcao_selecionada();
-        }
-    }
-    if (!gpio_get(Botao_A)) {
-        voltar_menu_principal();
-    }
-}
-
-*/
 // Retorna ao Menu Principal
+
+
 void voltar_menu_principal() {
     menu_atual = menu_principal;
-    num_opcoes = 4;
+    num_opcoes = NUM_OPCOES_PRINCIPAL;
     opcao_atual = 0;
 }
 
+
+/*
 // Ação para Opção Selecionada
 void opcao_selecionada() {
     ssd1306_fill(&ssd, false);
@@ -254,7 +234,19 @@ void opcao_selecionada() {
     ssd1306_send_data(&ssd);
     sleep_ms(1000);
 }
+*/
 
+void opcao_selecionada() {
+    if (menu_atual[opcao_atual].acao) {
+        menu_atual[opcao_atual].acao();
+    } else {
+        ssd1306_fill(&ssd, false);
+        ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
+        ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
+        ssd1306_send_data(&ssd);
+        sleep_ms(1000);
+    }
+}
 
 // Funções de Ação do Menu
 void mostrar_temperatura() {
