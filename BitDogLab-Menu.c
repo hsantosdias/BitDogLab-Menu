@@ -39,6 +39,7 @@ typedef struct Menu {
     const char *titulo;
     struct Menu *submenus;
     int num_submenus;
+    void (*acao)(void); // Adição de ponteiro para ação
 } Menu;
 
 void iniciar_oled();
@@ -58,14 +59,23 @@ void mostrar_mensagens(void);
 void configurar_sistema(void);
 void mostrar_informacoes(void);
 
+
+// Submenus para Monitoramento Ambiental
+Menu submenu_monitoramento[] = {
+    {"Temperatura", NULL, 0, mostrar_temperatura},
+    {"Umidade", NULL, 0, mostrar_umidade},
+    {"Voltar", NULL, 0, voltar_menu_principal}
+};
+
+/*
 // Submenus
 Menu submenu_monitoramento[] = {
-    {"Menu 01", NULL, 0},
+    {"Temperatura", NULL, 0},
     {"Menu 02", NULL, 0},
     {"Menu 03", NULL, 0},
     {"Voltar", NULL, 0}
 };
-
+*/
 Menu submenu_navegacao[] = {
     {"Menu 01", NULL, 0},
     {"Menu 02", NULL, 0},
