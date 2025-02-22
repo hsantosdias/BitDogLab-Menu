@@ -172,12 +172,11 @@ void mostrar_menu() {
 
         // Retângulo de Seleção no Eixo X
         if (i == opcao_atual) {
-            ssd1306_rect(&ssd, 0, i * 16, 128, 16, true, false);
+            ssd1306_rect(&ssd, i * 16, 1, 128, 16, true, false);
         }
     }
     ssd1306_send_data(&ssd);
 }
-
 
 void navegar_menu() {
     adc_select_input(0);
