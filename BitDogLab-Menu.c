@@ -41,15 +41,22 @@ typedef struct Menu {
     int num_submenus;
 } Menu;
 
-// Prototipagem de Funções
 void iniciar_oled();
 void iniciar_joystick();
 void animacao_inicial();
 void mostrar_menu();
 void navegar_menu();
 void voltar_menu_principal();
+// Prototipagem de Funções
 void opcao_selecionada();
 
+// Funções de Ação para Menu
+void mostrar_temperatura(void);
+void mostrar_umidade(void);
+void mostrar_posicao(void);
+void mostrar_mensagens(void);
+void configurar_sistema(void);
+void mostrar_informacoes(void);
 // Submenus
 Menu submenu_monitoramento[] = {
     {"Menu 01", NULL, 0},
@@ -61,7 +68,6 @@ Menu submenu_monitoramento[] = {
 Menu submenu_navegacao[] = {
     {"Menu 01", NULL, 0},
     {"Menu 02", NULL, 0},
-    {"Menu 03", NULL, 0},
     {"Voltar", NULL, 0}
 };
 
@@ -69,7 +75,8 @@ Menu submenu_alertas[] = {
     {"Menu 01", NULL, 0},
     {"Menu 02", NULL, 0},
     {"Menu 03", NULL, 0},
-    {"Voltar", NULL, 0}
+    {"Voltar", NULL, 0},
+    {"Menu 03", NULL, 0},
 };
 
 Menu submenu_configuracoes[] = {
@@ -206,4 +213,54 @@ void opcao_selecionada() {
     ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
     ssd1306_send_data(&ssd);
     sleep_ms(1000);
+}
+
+
+// Funções de Ação do Menu
+void mostrar_temperatura() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Temperatura:", 10, 20);
+    ssd1306_draw_string(&ssd, "25.5 C", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_umidade() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Umidade:", 10, 20);
+    ssd1306_draw_string(&ssd, "65%", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_posicao() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Latitude: -23.5", 10, 20);
+    ssd1306_draw_string(&ssd, "Longitude: -46.6", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_mensagens() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Sem mensagens", 10, 20);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void configurar_sistema() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Config. Sistema", 10, 20);
+    ssd1306_draw_string(&ssd, "Ajustes feitos", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_informacoes() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Info. Sistema", 10, 20);
+    ssd1306_draw_string(&ssd, "Versao 1.0", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+
 }
