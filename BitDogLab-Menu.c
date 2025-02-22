@@ -202,12 +202,12 @@ void navegar_menu() {
     
 
 
-    if (adc_value_x > 3000) {  // Direita
+    if (adc_value_x < 1000) {  // Direita
         opcao_atual = (opcao_atual + 1) % num_opcoes;
         printf("Navegando para Esquera - Opcao: %d\n", opcao_atual);
 //        mostrar_menu();
     }
-    if (adc_value_x < 1000) {  // Esquerda
+    if (adc_value_x > 3000) {  // Esquerda
         opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
         printf("Navegando para Direita - Opcao: %d\n", opcao_atual);
 //        mostrar_menu();
