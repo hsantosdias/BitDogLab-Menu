@@ -109,7 +109,7 @@ int main() {
 
     iniciar_joystick();
     iniciar_oled();
-//    animacao_inicial();
+ //  animacao_inicial();
 
     // Configuração do botão B para modo BOOTSEL
     gpio_init(Botao_B);
@@ -166,16 +166,15 @@ void animacao_inicial() {
     ssd1306_send_data(&ssd);
 }
 
-// Mostra o Menu na Tela
+
 void mostrar_menu() {
-    printf("Mostrando Menu - Opcao Atual: %d\n", opcao_atual);
     ssd1306_fill(&ssd, false);
     for (int i = 0; i < num_opcoes; i++) {
+        ssd1306_draw_string(&ssd, menu_atual[i].titulo, 5, i * 16 + 4);
+
+        // Retângulo de Seleção no Eixo X
         if (i == opcao_atual) {
             ssd1306_rect(&ssd, 0, i * 16, 128, 16, true, false);
-            ssd1306_draw_string(&ssd, menu_atual[i].titulo, 5, i * 16 + 4);
-        } else {
-            ssd1306_draw_string(&ssd, menu_atual[i].titulo, 5, i * 16 + 4);
         }
     }
     ssd1306_send_data(&ssd);
@@ -197,17 +196,17 @@ void navegar_menu() {
         printf("Navegando para Cima - Opcao: %d\n", opcao_atual);
         mostrar_menu();
     }
+    
+
     if (!gpio_get(JOYSTICK_PB)) {
-        printf("Botao Joystick Pressionado - Opcao: %d\n", opcao_atual);
-        if (menu_atual[opcao_atual].submenus) {
-            menu_atual = menu_atual[opcao_atual].submenus;
-            num_opcoes = menu_atual[0].num_submenus;
-            opcao_atual = 0;
-            printf("Entrando em Submenu: %s\n", menu_atual[opcao_atual].titulo);
-        } else {
+        sleep_ms(50); // Debounce
+        if (!gpio_get(JOYSTICK_PB)) {
+            printf("Botao Joystick Pressionado - Opcao: %d\n", opcao_atual);
             opcao_selecionada();
         }
     }
+
+
     if (!gpio_get(Botao_A)) {
         printf("Botao A Pressionado - Voltando ao Menu Principal\n");
         voltar_menu_principal();
@@ -216,8 +215,6 @@ void navegar_menu() {
 
 
 // Retorna ao Menu Principal
-
-
 void voltar_menu_principal() {
     menu_atual = menu_principal;
     num_opcoes = NUM_OPCOES_PRINCIPAL;
@@ -225,21 +222,15 @@ void voltar_menu_principal() {
 }
 
 
-/*
 // Ação para Opção Selecionada
 void opcao_selecionada() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
-    ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(1000);
-}
-*/
+    printf("Opcao Selecionada: %s\n", menu_atual[opcao_atual].titulo);
 
-void opcao_selecionada() {
     if (menu_atual[opcao_atual].acao) {
-        menu_atual[opcao_atual].acao();
+        printf("Executando acao para: %s\n", menu_atual[opcao_atual].titulo);
+        menu_atual[opcao_atual].acao();  // Executa a função associada
     } else {
+        // Exibe mensagem genérica se não houver ação
         ssd1306_fill(&ssd, false);
         ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
         ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
@@ -247,6 +238,7 @@ void opcao_selecionada() {
         sleep_ms(1000);
     }
 }
+
 
 // Funções de Ação do Menu
 void mostrar_temperatura() {
