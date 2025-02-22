@@ -102,6 +102,8 @@ int num_opcoes = 4;
 
 int main() {
     stdio_init_all();
+    printf("Inicializando o sistema...\n");
+
     iniciar_joystick();
     iniciar_oled();
 //    animacao_inicial();
@@ -135,6 +137,7 @@ void iniciar_oled() {
 
 // Inicializa o Joystick e Botões
 void iniciar_joystick() {
+    printf("Inicializando Joystick...\n");
     adc_init();
     adc_gpio_init(JOYSTICK_X_PIN);
     adc_gpio_init(JOYSTICK_Y_PIN);
@@ -162,6 +165,7 @@ void animacao_inicial() {
 
 // Mostra o Menu na Tela
 void mostrar_menu() {
+    printf("Mostrando Menu - Opcao Atual: %d\n", opcao_atual);
     ssd1306_fill(&ssd, false);
     for (int i = 0; i < num_opcoes; i++) {
         if (i == opcao_atual) {
@@ -174,6 +178,41 @@ void mostrar_menu() {
     ssd1306_send_data(&ssd);
 }
 
+
+void navegar_menu() {
+    adc_select_input(1);
+    uint16_t adc_value_y = adc_read();
+    printf("Joystick Y: %d\n", adc_value_y);
+
+    if (adc_value_y > 3000) {
+        opcao_atual = (opcao_atual + 1) % num_opcoes;
+        printf("Navegando para Baixo - Opcao: %d\n", opcao_atual);
+        mostrar_menu();
+    }
+    if (adc_value_y < 1000) {
+        opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
+        printf("Navegando para Cima - Opcao: %d\n", opcao_atual);
+        mostrar_menu();
+    }
+    if (!gpio_get(JOYSTICK_PB)) {
+        printf("Botao Joystick Pressionado - Opcao: %d\n", opcao_atual);
+        if (menu_atual[opcao_atual].submenus) {
+            menu_atual = menu_atual[opcao_atual].submenus;
+            num_opcoes = menu_atual[0].num_submenus;
+            opcao_atual = 0;
+            printf("Entrando em Submenu: %s\n", menu_atual[opcao_atual].titulo);
+        } else {
+            opcao_selecionada();
+        }
+    }
+    if (!gpio_get(Botao_A)) {
+        printf("Botao A Pressionado - Voltando ao Menu Principal\n");
+        voltar_menu_principal();
+    }
+}
+
+
+/*
 // Navegação no Menu
 void navegar_menu() {
     adc_select_input(1);
@@ -199,6 +238,7 @@ void navegar_menu() {
     }
 }
 
+*/
 // Retorna ao Menu Principal
 void voltar_menu_principal() {
     menu_atual = menu_principal;
