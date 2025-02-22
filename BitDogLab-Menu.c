@@ -116,9 +116,14 @@ int main() {
     gpio_set_irq_enabled_with_callback(Botao_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
     while (true) {
-        mostrar_menu();
-        navegar_menu();
-        sleep_ms(150);
+        // Substituição do delay por verificação de tempo para atualização do menu - correção de erro no tempo de atualização
+        static absolute_time_t last_update_time = 0;
+        if (absolute_time_diff_us(last_update_time, get_absolute_time()) > 200000) {  // 200 ms
+            last_update_time = get_absolute_time();
+            mostrar_menu();
+            navegar_menu();
+        }
+        
     }
 }
 
@@ -164,6 +169,14 @@ void animacao_inicial() {
     ssd1306_send_data(&ssd);
 }
 
+// Função generica para exibir mensagem no OLED
+void exibir_mensagem(const char *linha1, const char *linha2) {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, linha1, 10, 20);
+    ssd1306_draw_string(&ssd, linha2, 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
 
 void mostrar_menu() {
     ssd1306_fill(&ssd, false);
@@ -214,15 +227,18 @@ void navegar_menu() {
 
 
 
+    static absolute_time_t last_press_time = 0;
     if (!gpio_get(JOYSTICK_PB)) {
-        sleep_ms(50); // Debounce
-        if (!gpio_get(JOYSTICK_PB)) {
+        absolute_time_t now = get_absolute_time();
+        if (absolute_time_diff_us(last_press_time, now) > 50000) {  // 50 ms
+            last_press_time = now;
             printf("Botao Joystick Pressionado - Opcao: %d\n", opcao_atual);
             opcao_selecionada();
         }
     }
 
 
+    
     if (!gpio_get(Botao_A)) {
         printf("Botao A Pressionado - Voltando ao Menu Principal\n");
         voltar_menu_principal();
@@ -245,18 +261,32 @@ void opcao_selecionada() {
     if (menu_atual[opcao_atual].acao) {
         printf("Executando acao para: %s\n", menu_atual[opcao_atual].titulo);
         menu_atual[opcao_atual].acao();  // Executa a função associada
-    } else {
-        // Exibe mensagem genérica se não houver ação
-        ssd1306_fill(&ssd, false);
-        ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
-        ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
-        ssd1306_send_data(&ssd);
-        sleep_ms(1000);
+        return;  // Retorna após executar a ação
     }
+
+    if (menu_atual[opcao_atual].submenus != NULL) {
+        menu_atual = menu_atual[opcao_atual].submenus;
+        num_opcoes = menu_atual[0].num_submenus;
+        opcao_atual = 0;
+    }
+
+    // Exibe mensagem genérica se não houver ação
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
+    ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(500);
 }
 
 
+
+
 // Funções de Ação do Menu
+void mostrar_temperatura() {
+    exibir_mensagem("Temperatura:", "25.5 C");
+}
+
+/*
 void mostrar_temperatura() {
     ssd1306_fill(&ssd, false);
     ssd1306_draw_string(&ssd, "Temperatura:", 10, 20);
@@ -265,6 +295,13 @@ void mostrar_temperatura() {
     sleep_ms(2000);
 }
 
+*/
+
+void mostrar_umidade() {
+    exibir_mensagem("Umidade:", "65%");
+}
+
+/*
 void mostrar_umidade() {
     ssd1306_fill(&ssd, false);
     ssd1306_draw_string(&ssd, "Umidade:", 10, 20);
@@ -272,6 +309,7 @@ void mostrar_umidade() {
     ssd1306_send_data(&ssd);
     sleep_ms(2000);
 }
+*/
 
 void mostrar_posicao() {
     ssd1306_fill(&ssd, false);
@@ -304,3 +342,4 @@ void mostrar_informacoes() {
     sleep_ms(2000);
 
 }
+
