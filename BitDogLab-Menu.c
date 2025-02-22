@@ -57,6 +57,7 @@ void mostrar_posicao(void);
 void mostrar_mensagens(void);
 void configurar_sistema(void);
 void mostrar_informacoes(void);
+
 // Submenus
 Menu submenu_monitoramento[] = {
     {"Menu 01", NULL, 0},
@@ -90,7 +91,7 @@ Menu submenu_configuracoes[] = {
 Menu menu_principal[] = {
   {"Info Ambiental", submenu_monitoramento, 4},
   {"GeoLocalizacao", submenu_navegacao, 4},
-  {"Alertas Mensagems", submenu_alertas, 4},
+  {"Alert Mensagems", submenu_alertas, 4},
   {"Config Sistema", submenu_configuracoes, 4}
 };
 
