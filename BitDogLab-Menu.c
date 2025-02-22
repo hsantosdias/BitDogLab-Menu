@@ -59,7 +59,6 @@ void mostrar_mensagens(void);
 void configurar_sistema(void);
 void mostrar_informacoes(void);
 
-
 // Submenus para Monitoramento Ambiental
 Menu submenu_monitoramento[] = {
     {"Temperatura", NULL, 0, mostrar_temperatura},
@@ -67,35 +66,25 @@ Menu submenu_monitoramento[] = {
     {"Voltar", NULL, 0, voltar_menu_principal}
 };
 
-/*
-// Submenus
-Menu submenu_monitoramento[] = {
-    {"Temperatura", NULL, 0},
-    {"Menu 02", NULL, 0},
-    {"Menu 03", NULL, 0},
-    {"Voltar", NULL, 0}
-};
-*/
+// Submenus para GeoLocalizacao
 Menu submenu_navegacao[] = {
-    {"Menu 01", NULL, 0},
-    {"Menu 02", NULL, 0},
-    {"Voltar", NULL, 0}
+    {"Posição", NULL, 0, mostrar_posicao},
+    {"Voltar", NULL, 0, voltar_menu_principal}
 };
 
+// Submenus para Alertas e Mensagens
 Menu submenu_alertas[] = {
-    {"Menu 01", NULL, 0},
-    {"Menu 02", NULL, 0},
-    {"Menu 03", NULL, 0},
-    {"Voltar", NULL, 0},
-    {"Menu 03", NULL, 0},
+    {"Mensagens", NULL, 0, mostrar_mensagens},
+    {"Voltar", NULL, 0, voltar_menu_principal}
 };
 
+// Submenus para Configurações do Sistema
 Menu submenu_configuracoes[] = {
-    {"Menu 01", NULL, 0},
-    {"Menu 02", NULL, 0},
-    {"Menu 03", NULL, 0},
-    {"Voltar", NULL, 0}
+    {"Ajustes", NULL, 0, configurar_sistema},
+    {"Informações", NULL, 0, mostrar_informacoes},
+    {"Voltar", NULL, 0, voltar_menu_principal}
 };
+
 
 // Menu Principal
 Menu menu_principal[] = {
