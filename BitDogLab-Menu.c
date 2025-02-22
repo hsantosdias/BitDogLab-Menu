@@ -184,6 +184,11 @@ void navegar_menu() {
     uint16_t adc_value_y = adc_read();
     printf("Joystick Y: %d\n", adc_value_y);
 
+    adc_select_input(1);  // Eixo X para Navegação
+    uint16_t adc_value_x = adc_read();
+    printf("Joystick X: %d\n", adc_value_x);
+
+
     if (adc_value_y < 1000) {
         opcao_atual = (opcao_atual + 1) % num_opcoes;
         printf("Navegando para Baixo - Opcao: %d\n", opcao_atual);
@@ -195,6 +200,20 @@ void navegar_menu() {
         mostrar_menu();
     }
     
+
+
+    if (adc_value_x > 3000) {  // Direita
+        opcao_atual = (opcao_atual + 1) % num_opcoes;
+        printf("Navegando para Esquera - Opcao: %d\n", opcao_atual);
+//        mostrar_menu();
+    }
+    if (adc_value_x < 1000) {  // Esquerda
+        opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
+        printf("Navegando para Direita - Opcao: %d\n", opcao_atual);
+//        mostrar_menu();
+    }
+
+
 
     if (!gpio_get(JOYSTICK_PB)) {
         sleep_ms(50); // Debounce
