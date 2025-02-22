@@ -88,7 +88,6 @@ Menu submenu_configuracoes[] = {
     {"Voltar", NULL, 0, voltar_menu_principal}
 };
 
-
 // Menu Principal - correção de erro no número de submenus
 Menu menu_principal[] = {
   {"Info Ambiental", submenu_monitoramento, 3},
@@ -97,11 +96,10 @@ Menu menu_principal[] = {
   {"Config Sistema", submenu_configuracoes, 3}
 };
 
-
 // Variáveis Globais
 int opcao_atual = 0;
 Menu *menu_atual = menu_principal;
-int num_opcoes = 4;
+int num_opcoes = NUM_OPCOES_PRINCIPAL;
 
 int main() {
     stdio_init_all();
@@ -109,7 +107,7 @@ int main() {
 
     iniciar_joystick();
     iniciar_oled();
- //  animacao_inicial();
+//    animacao_inicial();
 
     // Configuração do botão B para modo BOOTSEL
     gpio_init(Botao_B);
@@ -182,16 +180,16 @@ void mostrar_menu() {
 
 
 void navegar_menu() {
-    adc_select_input(1);
+    adc_select_input(0);
     uint16_t adc_value_y = adc_read();
     printf("Joystick Y: %d\n", adc_value_y);
 
-    if (adc_value_y > 3000) {
+    if (adc_value_y < 1000) {
         opcao_atual = (opcao_atual + 1) % num_opcoes;
         printf("Navegando para Baixo - Opcao: %d\n", opcao_atual);
         mostrar_menu();
     }
-    if (adc_value_y < 1000) {
+    if (adc_value_y > 3000) {
         opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
         printf("Navegando para Cima - Opcao: %d\n", opcao_atual);
         mostrar_menu();
