@@ -1,5 +1,3 @@
-
-
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_STANDARD 11)
@@ -23,44 +21,51 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
+
+# Definir o modelo da placa
 set(PICO_BOARD pico CACHE STRING "Board type")
 
-# Pull in Raspberry Pi Pico SDK (must be before project)
+# Importar o SDK do Raspberry Pi Pico
 include(pico_sdk_import.cmake)
 
+# Nome do projeto e linguagens utilizadas
 project(BitDogLab-Menu C CXX ASM)
 
-# Initialise the Raspberry Pi Pico SDK
+# Inicializar o SDK do Raspberry Pi Pico
 pico_sdk_init()
 
-# Add executable. Default name is the project name, version 0.1
+# Adicionar o executável
+add_executable(BitDogLab-Menu 
+    BitDogLab-Menu.c 
+    ssd1306.c 
+    led_matrix.c
+)
 
-add_executable(BitDogLab-Menu BitDogLab-Menu.c ssd1306.c led_matrix.c)
-
+# Configurações do executável
 pico_set_program_name(BitDogLab-Menu "BitDogLab-Menu")
 pico_set_program_version(BitDogLab-Menu "0.1")
 
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(BitDogLab-Menu 0)
+# Habilitar saída USB e desabilitar UART
 pico_enable_stdio_usb(BitDogLab-Menu 1)
+pico_enable_stdio_uart(BitDogLab-Menu 0)
 
+# Gerar cabeçalho para PIO
 pico_generate_pio_header(BitDogLab-Menu ${CMAKE_CURRENT_LIST_DIR}/ws2812b.pio)
 
-# Add the standard library to the build
-target_link_libraries(BitDogLab-Menu
-        pico_stdlib hardware_uart hardware_i2c)
-        pico_enable_stdio_usb(BitDogLab-Menu 1)
-        pico_enable_stdio_uart(BitDogLab-Menu 0)
-        pico_add_extra_outputs(BitDogLab-Menu)
-
-        # Add the standard include files to the build
-target_include_directories(BitDogLab-Menu PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}
+# Adicionar bibliotecas e linkar ao executável
+target_link_libraries(BitDogLab-Menu 
+    pico_stdlib 
+    hardware_uart 
+    hardware_i2c 
+    hardware_adc 
+    hardware_pwm 
+    hardware_pio
 )
 
-# Add any user requested libraries
-target_link_libraries(BitDogLab-Menu  pico_stdlib hardware_i2c hardware_adc hardware_pwm hardware_pio
-        )
+# Incluir diretórios de cabeçalhos
+target_include_directories(BitDogLab-Menu PRIVATE 
+    ${CMAKE_CURRENT_LIST_DIR}
+)
 
+# Gerar arquivos de saída extras (UF2, BIN, etc.)
 pico_add_extra_outputs(BitDogLab-Menu)
-
