@@ -53,6 +53,11 @@ void navegar_menu();
 void voltar_menu_principal();
 // Prototipagem de Funções
 void opcao_selecionada();
+// Funções de Navegação e Menu
+void desenhar_opcoes();
+void desenhar_retangulo_selecao();
+void desenhar_setas();
+void exibir_mensagem(const char *linha1, const char *linha2);
 
 // Funções de Ação para Menu
 void mostrar_temperatura(void);
@@ -100,6 +105,9 @@ Menu menu_principal[] = {
 int opcao_atual = 0;
 Menu *menu_atual = menu_principal;
 int num_opcoes = NUM_OPCOES_PRINCIPAL;
+bool houve_interacao = false;
+static absolute_time_t last_interaction_time = 0;
+const uint32_t TIMEOUT_US = 30000000; // 30 segundos
 
 int main() {
     stdio_init_all();
@@ -107,7 +115,9 @@ int main() {
 
     iniciar_joystick();
     iniciar_oled();
-//    animacao_inicial();
+    //animacao_inicial(); //Fase de testes
+    menu_atual = menu_principal;
+    last_interaction_time = get_absolute_time();
 
     // Configuração do botão B para modo BOOTSEL
     gpio_init(Botao_B);
@@ -116,14 +126,19 @@ int main() {
     gpio_set_irq_enabled_with_callback(Botao_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
     while (true) {
-        // Substituição do delay por verificação de tempo para atualização do menu - correção de erro no tempo de atualização
-        static absolute_time_t last_update_time = 0;
-        if (absolute_time_diff_us(last_update_time, get_absolute_time()) > 200000) {  // 200 ms
-            last_update_time = get_absolute_time();
-            mostrar_menu();
-            navegar_menu();
+        // Verifica timeout para voltar ao menu principal
+        if (absolute_time_diff_us(last_interaction_time, get_absolute_time()) > TIMEOUT_US) {
+            voltar_menu_principal();
+            last_interaction_time = get_absolute_time();
         }
-        
+
+        // Atualiza o menu periodicamente
+        static absolute_time_t last_update_time = 0;
+        if (absolute_time_diff_us(last_update_time, get_absolute_time()) > 200000) {
+            last_update_time = get_absolute_time();
+            navegar_menu();
+            mostrar_menu();
+        }
     }
 }
 
@@ -178,16 +193,36 @@ void exibir_mensagem(const char *linha1, const char *linha2) {
     sleep_ms(2000);
 }
 
-void mostrar_menu() {
-    ssd1306_fill(&ssd, false);
+
+// Desenha as opções do menu
+void desenhar_opcoes() {
     for (int i = 0; i < num_opcoes; i++) {
         ssd1306_draw_string(&ssd, menu_atual[i].titulo, 5, i * 16 + 4);
+    }
+}
 
-        // Retângulo de Seleção no Eixo X
-        if (i == opcao_atual) {
-            ssd1306_rect(&ssd, i * 16, 1, 128, 16, true, false);
+// Desenha o retângulo de seleção no OLED
+void desenhar_retangulo_selecao() {
+    ssd1306_rect(&ssd, opcao_atual * 16, 0, 128, 16, true, false);
+}
+
+// Desenha setas de navegação
+void desenhar_setas() {
+    if (num_opcoes > 1) {
+        ssd1306_draw_string(&ssd, "x", 125, opcao_atual * 16);
+        if (opcao_atual < num_opcoes - 1) {
+            ssd1306_draw_string(&ssd, "v", 60, 56);
         }
     }
+}
+
+
+// Mostra o menu na tela OLED
+void mostrar_menu() {
+    ssd1306_fill(&ssd, false);
+    desenhar_opcoes();
+    desenhar_retangulo_selecao();
+    desenhar_setas();
     ssd1306_send_data(&ssd);
 }
 
@@ -286,30 +321,12 @@ void mostrar_temperatura() {
     exibir_mensagem("Temperatura:", "25.5 C");
 }
 
-/*
-void mostrar_temperatura() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Temperatura:", 10, 20);
-    ssd1306_draw_string(&ssd, "25.5 C", 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-}
 
-*/
 
 void mostrar_umidade() {
     exibir_mensagem("Umidade:", "65%");
 }
 
-/*
-void mostrar_umidade() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Umidade:", 10, 20);
-    ssd1306_draw_string(&ssd, "65%", 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-}
-*/
 
 void mostrar_posicao() {
     ssd1306_fill(&ssd, false);
