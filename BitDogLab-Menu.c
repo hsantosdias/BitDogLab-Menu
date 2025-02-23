@@ -96,12 +96,12 @@ Menu submenu_configuracoes[] = {
     {"Voltar", NULL, 0, voltar_menu_principal}
 };
 
-// Menu Principal - correção de erro no número de submenus
+// Correção no menu_principal - adicionando o campo num_submenus corretamente
 Menu menu_principal[] = {
-  {"Info Ambiental", submenu_monitoramento, 3},
-  {"GeoLocalizacao", submenu_navegacao, 2},
-  {"Alert Mensagems", submenu_alertas, 2},
-  {"Config Sistema", submenu_configuracoes, 3}
+    {"Info Ambiental", submenu_monitoramento, 3, NULL},
+    {"GeoLocalizacao", submenu_navegacao, 2, NULL},
+    {"Alert Mensagems", submenu_alertas, 2, NULL},
+    {"Config Sistema", submenu_configuracoes, 3, NULL}
 };
 
 // Variáveis Globais
@@ -219,13 +219,35 @@ void desenhar_setas() {
     }
 }
 
-
+// Correção na função mostrar_menu()
 void mostrar_menu() {
-    ssd1306_fill(&ssd, false);  // Limpa a tela
-    sleep_ms(50);  // Pequeno delay para estabilizar
-    desenhar_opcoes();
-    desenhar_retangulo_selecao();
-    desenhar_setas();
+    ssd1306_fill(&ssd, false);
+    sleep_ms(50);
+
+    // Debug para verificar o número de opções atual
+    printf("Desenhando menu com %d opcoes\n", num_opcoes);
+
+    // Desenha todas as opções do menu atual
+    for (int i = 0; i < num_opcoes; i++) {
+        if (menu_atual[i].titulo != NULL) {
+            printf("Desenhando opcao %d: %s\n", i, menu_atual[i].titulo);
+            ssd1306_draw_string(&ssd, menu_atual[i].titulo, 5, i * 16 + 4);
+        }
+    }
+
+    // Desenha o retângulo de seleção
+    ssd1306_rect(&ssd, opcao_atual * 16, 0, 128, 16, true, false);
+
+    // Desenha as setas de navegação se necessário
+    if (num_opcoes > 1) {
+        if (opcao_atual > 0) {
+            ssd1306_draw_string(&ssd, "^", 60, 0);
+        }
+        if (opcao_atual < num_opcoes - 1) {
+            ssd1306_draw_string(&ssd, "v", 60, 56);
+        }
+    }
+
     ssd1306_send_data(&ssd);
 }
 
@@ -238,10 +260,6 @@ void navegar_menu() {
     uint16_t adc_value_y = adc_read();
     printf("Joystick Y: %d\n", adc_value_y);
 
-    adc_select_input(1);  // Eixo X para Navegação
-    uint16_t adc_value_x = adc_read();
-    printf("Joystick X: %d\n", adc_value_x);
-
 
     if (adc_value_y < 1000) {
         opcao_atual = (opcao_atual + 1) % num_opcoes;
@@ -252,19 +270,6 @@ void navegar_menu() {
         opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
         printf("Navegando para Cima - Opcao: %d\n", opcao_atual);
         mostrar_menu();
-    }
-    
-
-
-    if (adc_value_x < 1000) {  // Direita
-        opcao_atual = (opcao_atual + 1) % num_opcoes;
-        printf("Navegando para Esquera - Opcao: %d\n", opcao_atual);
-//        mostrar_menu();
-    }
-    if (adc_value_x > 3000) {  // Esquerda
-        opcao_atual = (opcao_atual - 1 + num_opcoes) % num_opcoes;
-        printf("Navegando para Direita - Opcao: %d\n", opcao_atual);
-//        mostrar_menu();
     }
 
 
@@ -308,7 +313,7 @@ void voltar_menu_principal() {
 
 
 
-// Ação para Opção Selecionada
+// Correção na função opcao_selecionada()
 void opcao_selecionada() {
     printf("Opcao Selecionada: %s\n", menu_atual[opcao_atual].titulo);
 
@@ -321,9 +326,7 @@ void opcao_selecionada() {
     // Verifica se há uma ação associada e a executa
     if (menu_atual[opcao_atual].acao) {
         printf("Executando acao para: %s\n", menu_atual[opcao_atual].titulo);
-        menu_atual[opcao_atual].acao();  // Executa a função associada
-        
-        // Após executar a ação, redesenha o submenu
+        menu_atual[opcao_atual].acao();
         mostrar_menu();
         return;
     }
@@ -331,20 +334,17 @@ void opcao_selecionada() {
     // Verifica se há submenus e navega para eles
     if (menu_atual[opcao_atual].submenus != NULL) {
         menu_atual = menu_atual[opcao_atual].submenus;
-        num_opcoes = menu_atual[0].num_submenus;  // Atualiza o número de opções do submenu
-        opcao_atual = 0;  // Reseta a seleção para o primeiro item do submenu
-        
-        // Mostra o submenu atualizado
+        num_opcoes = menu_atual[opcao_atual].num_submenus;  // Correção aqui
+        opcao_atual = 0;
         mostrar_menu();
         return;
     }
 
     // Exibe mensagem genérica se não houver ação ou submenu
     exibir_mensagem("Opcao Selecionada:", menu_atual[opcao_atual].titulo);
-    
-    // Redesenha o menu para o estado atual
     mostrar_menu();
 }
+
 
 
 
@@ -353,6 +353,8 @@ void opcao_selecionada() {
 // Funções de Ação do Menu
 void mostrar_temperatura() {
     exibir_mensagem("Temperatura:", "25.5 C");
+    voltar_menu_principal();  // Volta ao menu principal após exibir a mensagem 
+//    mostrar_menu();
 }
 
 
