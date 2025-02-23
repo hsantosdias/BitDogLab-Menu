@@ -281,37 +281,64 @@ void navegar_menu() {
 }
 
 
-// Retorna ao Menu Principal
+// Retorna ao Menu Principal ou ao Menu Anterior
 void voltar_menu_principal() {
-    menu_atual = menu_principal;
-    num_opcoes = NUM_OPCOES_PRINCIPAL;
+    if (menu_atual == submenu_monitoramento || 
+        menu_atual == submenu_navegacao || 
+        menu_atual == submenu_alertas || 
+        menu_atual == submenu_configuracoes) {
+        // Se estiver em um submenu, volta ao Menu Principal
+        menu_atual = menu_principal;
+        num_opcoes = NUM_OPCOES_PRINCIPAL;
+    } else {
+        // Caso contrário, permanece no Menu Principal
+        menu_atual = menu_principal;
+        num_opcoes = NUM_OPCOES_PRINCIPAL;
+    }
     opcao_atual = 0;
+    mostrar_menu();  // Redesenha o Menu Principal
 }
+
 
 
 // Ação para Opção Selecionada
 void opcao_selecionada() {
     printf("Opcao Selecionada: %s\n", menu_atual[opcao_atual].titulo);
 
+    // Verifica se a opção é "Voltar"
+    if (strcmp(menu_atual[opcao_atual].titulo, "Voltar") == 0) {
+        voltar_menu_principal();
+        return;
+    }
+
+    // Verifica se há uma ação associada e a executa
     if (menu_atual[opcao_atual].acao) {
         printf("Executando acao para: %s\n", menu_atual[opcao_atual].titulo);
         menu_atual[opcao_atual].acao();  // Executa a função associada
-        return;  // Retorna após executar a ação
+        
+        // Após executar a ação, redesenha o submenu
+        mostrar_menu();
+        return;
     }
 
+    // Verifica se há submenus e navega para eles
     if (menu_atual[opcao_atual].submenus != NULL) {
         menu_atual = menu_atual[opcao_atual].submenus;
-        num_opcoes = menu_atual[0].num_submenus;
-        opcao_atual = 0;
+        num_opcoes = menu_atual[0].num_submenus;  // Atualiza o número de opções do submenu
+        opcao_atual = 0;  // Reseta a seleção para o primeiro item do submenu
+        
+        // Mostra o submenu atualizado
+        mostrar_menu();
+        return;
     }
 
-    // Exibe mensagem genérica se não houver ação
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Opcao Selecionada:", 10, 20);
-    ssd1306_draw_string(&ssd, menu_atual[opcao_atual].titulo, 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(500);
+    // Exibe mensagem genérica se não houver ação ou submenu
+    exibir_mensagem("Opcao Selecionada:", menu_atual[opcao_atual].titulo);
+    
+    // Redesenha o menu para o estado atual
+    mostrar_menu();
 }
+
 
 
 
