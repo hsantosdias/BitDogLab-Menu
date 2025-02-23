@@ -25,6 +25,9 @@ Autor: Hugo Santos Dias
 #define Botao_A 5          // GPIO para voltar ao Menu Principal
 #define Botao_B 6          // GPIO para BOOTSEL
 
+#define MENU_TIMEOUT_US 30000000  // 30 segundos
+#define BUTTON_DEBOUNCE_US 50000  // 50 ms
+
 // Trecho para modo BOOTSEL com Botão B
 #include "pico/bootrom.h"
 void gpio_irq_handler(uint gpio, uint32_t events) {
@@ -217,9 +220,9 @@ void desenhar_setas() {
 }
 
 
-// Mostra o menu na tela OLED
 void mostrar_menu() {
-    ssd1306_fill(&ssd, false);
+    ssd1306_fill(&ssd, false);  // Limpa a tela
+    sleep_ms(50);  // Pequeno delay para estabilizar
     desenhar_opcoes();
     desenhar_retangulo_selecao();
     desenhar_setas();
@@ -227,6 +230,10 @@ void mostrar_menu() {
 }
 
 void navegar_menu() {
+
+    static absolute_time_t last_joystick_time = 0;
+    absolute_time_t now = get_absolute_time();
+     
     adc_select_input(0);
     uint16_t adc_value_y = adc_read();
     printf("Joystick Y: %d\n", adc_value_y);
