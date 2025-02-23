@@ -4,6 +4,7 @@ Objetivo: Desenvolver um menu para seleção de opções
 Autor: Hugo Santos Dias
 */
 
+//incluindo bibliotecas necessárias
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
@@ -11,6 +12,8 @@ Autor: Hugo Santos Dias
 #include "hardware/i2c.h"
 #include "ssd1306.h"
 #include "font.h"
+// Trecho para modo BOOTSEL com Botão B
+#include "pico/bootrom.h"
 
 // Configurações do OLED
 #define I2C_PORT i2c1
@@ -25,14 +28,6 @@ Autor: Hugo Santos Dias
 #define Botao_A 5          // GPIO para voltar ao Menu Principal
 #define Botao_B 6          // GPIO para BOOTSEL
 
-#define MENU_TIMEOUT_US 30000000  // 30 segundos
-#define BUTTON_DEBOUNCE_US 50000  // 50 ms
-
-// Trecho para modo BOOTSEL com Botão B
-#include "pico/bootrom.h"
-void gpio_irq_handler(uint gpio, uint32_t events) {
-    reset_usb_boot(0, 0);
-}
 
 // Número de Opções no Menu Principal - correção de erro no número de opções
 const int NUM_OPCOES_PRINCIPAL = 4;
@@ -40,35 +35,34 @@ const int NUM_OPCOES_PRINCIPAL = 4;
 // Estrutura do OLED
 ssd1306_t ssd;
 
-// Estrutura do Menu
-typedef struct Menu {
-    const char *titulo;
-    struct Menu *submenus;
-    int num_submenus;
-    void (*acao)(void); // Adição de ponteiro para ação
-} Menu;
-
+// Prototipagem de Funções para o Menu e Navegação do Menu Principal
 void iniciar_oled();
 void iniciar_joystick();
 void animacao_inicial();
 void mostrar_menu();
 void navegar_menu();
 void voltar_menu_principal();
-// Prototipagem de Funções
 void opcao_selecionada();
-// Funções de Navegação e Menu
 void desenhar_opcoes();
 void desenhar_retangulo_selecao();
 void desenhar_setas();
 void exibir_mensagem(const char *linha1, const char *linha2);
 
-// Funções de Ação para Menu
+// Funções de Ação internas para os Menu
 void mostrar_temperatura(void);
 void mostrar_umidade(void);
 void mostrar_posicao(void);
 void mostrar_mensagens(void);
 void configurar_sistema(void);
 void mostrar_informacoes(void);
+
+// Estrutura do Menu - Adição de ponteiro para ação
+typedef struct Menu {
+    const char *titulo;
+    struct Menu *submenus;
+    int num_submenus;
+    void (*acao)(void); // Adição de ponteiro para ação
+} Menu;
 
 // Submenus para Monitoramento Ambiental
 Menu submenu_monitoramento[] = {
@@ -104,46 +98,13 @@ Menu menu_principal[] = {
     {"Config Sistema", submenu_configuracoes, 3, NULL}
 };
 
-// Variáveis Globais
+// Variáveis Globais (após declarar os menus)
 int opcao_atual = 0;
 Menu *menu_atual = menu_principal;
 int num_opcoes = NUM_OPCOES_PRINCIPAL;
 bool houve_interacao = false;
 static absolute_time_t last_interaction_time = 0;
 const uint32_t TIMEOUT_US = 30000000; // 30 segundos
-
-int main() {
-    stdio_init_all();
-    printf("Inicializando o sistema...\n");
-
-    iniciar_joystick();
-    iniciar_oled();
-    //animacao_inicial(); //Fase de testes
-    menu_atual = menu_principal;
-    last_interaction_time = get_absolute_time();
-
-    // Configuração do botão B para modo BOOTSEL
-    gpio_init(Botao_B);
-    gpio_set_dir(Botao_B, GPIO_IN);
-    gpio_pull_up(Botao_B);
-    gpio_set_irq_enabled_with_callback(Botao_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
-
-    while (true) {
-        // Verifica timeout para voltar ao menu principal
-        if (absolute_time_diff_us(last_interaction_time, get_absolute_time()) > TIMEOUT_US) {
-            voltar_menu_principal();
-            last_interaction_time = get_absolute_time();
-        }
-
-        // Atualiza o menu periodicamente
-        static absolute_time_t last_update_time = 0;
-        if (absolute_time_diff_us(last_update_time, get_absolute_time()) > 200000) {
-            last_update_time = get_absolute_time();
-            navegar_menu();
-            mostrar_menu();
-        }
-    }
-}
 
 // Inicializa o OLED
 void iniciar_oled() {
@@ -159,21 +120,6 @@ void iniciar_oled() {
     ssd1306_send_data(&ssd);
 }
 
-// Inicializa o Joystick e Botões
-void iniciar_joystick() {
-    printf("Inicializando Joystick...\n");
-    adc_init();
-    adc_gpio_init(JOYSTICK_X_PIN);
-    adc_gpio_init(JOYSTICK_Y_PIN);
-
-    gpio_init(JOYSTICK_PB);
-    gpio_set_dir(JOYSTICK_PB, GPIO_IN);
-    gpio_pull_up(JOYSTICK_PB);
-
-    gpio_init(Botao_A);
-    gpio_set_dir(Botao_A, GPIO_IN);
-    gpio_pull_up(Botao_A);
-}
 
 // Animação Inicial
 void animacao_inicial() {
@@ -186,6 +132,8 @@ void animacao_inicial() {
     ssd1306_fill(&ssd, false);
     ssd1306_send_data(&ssd);
 }
+
+
 
 // Função generica para exibir mensagem no OLED
 void exibir_mensagem(const char *linha1, const char *linha2) {
@@ -250,6 +198,74 @@ void mostrar_menu() {
 
     ssd1306_send_data(&ssd);
 }
+
+
+
+
+
+// Funções de Ação do Menu
+void mostrar_temperatura() {
+    exibir_mensagem("Temperatura:", "25.5 C");
+    voltar_menu_principal();  // Volta ao menu principal após exibir a mensagem 
+//    mostrar_menu();
+}
+
+
+
+void mostrar_umidade() {
+    exibir_mensagem("Umidade:", "65%");
+}
+
+
+void mostrar_posicao() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Latitude: -23.5", 10, 20);
+    ssd1306_draw_string(&ssd, "Longitude: -46.6", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_mensagens() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Sem mensagens", 10, 20);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void configurar_sistema() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Config. Sistema", 10, 20);
+    ssd1306_draw_string(&ssd, "Ajustes feitos", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+}
+
+void mostrar_informacoes() {
+    ssd1306_fill(&ssd, false);
+    ssd1306_draw_string(&ssd, "Info. Sistema", 10, 20);
+    ssd1306_draw_string(&ssd, "Versao 1.0", 10, 40);
+    ssd1306_send_data(&ssd);
+    sleep_ms(2000);
+
+}
+
+
+// Inicializa o Joystick e Botões
+void iniciar_joystick() {
+    printf("Inicializando Joystick...\n");
+    adc_init();
+    adc_gpio_init(JOYSTICK_X_PIN);
+    adc_gpio_init(JOYSTICK_Y_PIN);
+
+    gpio_init(JOYSTICK_PB);
+    gpio_set_dir(JOYSTICK_PB, GPIO_IN);
+    gpio_pull_up(JOYSTICK_PB);
+
+    gpio_init(Botao_A);
+    gpio_set_dir(Botao_A, GPIO_IN);
+    gpio_pull_up(Botao_A);
+}
+
 
 void navegar_menu() {
 
@@ -347,52 +363,44 @@ void opcao_selecionada() {
 
 
 
+// Função para resetar o sistema para o modo BOOTSEL
+void gpio_irq_handler(uint gpio, uint32_t events) {
+    reset_usb_boot(0, 0);
+}
 
+int main() {
+    stdio_init_all();
+    printf("Inicializando o sistema...\n");
 
+    iniciar_joystick();
+    iniciar_oled();
+    //animacao_inicial(); //Fase de testes
+    menu_atual = menu_principal;
+    last_interaction_time = get_absolute_time();
 
-// Funções de Ação do Menu
-void mostrar_temperatura() {
-    exibir_mensagem("Temperatura:", "25.5 C");
-    voltar_menu_principal();  // Volta ao menu principal após exibir a mensagem 
-//    mostrar_menu();
+    // Configuração do botão B para modo BOOTSEL
+    gpio_init(Botao_B);
+    gpio_set_dir(Botao_B, GPIO_IN);
+    gpio_pull_up(Botao_B);
+    gpio_set_irq_enabled_with_callback(Botao_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
+
+    while (true) {
+        // Verifica timeout para voltar ao menu principal
+        if (absolute_time_diff_us(last_interaction_time, get_absolute_time()) > TIMEOUT_US) {
+            voltar_menu_principal();
+            last_interaction_time = get_absolute_time();
+        }
+
+        // Atualiza o menu periodicamente
+        static absolute_time_t last_update_time = 0;
+        if (absolute_time_diff_us(last_update_time, get_absolute_time()) > 200000) {
+            last_update_time = get_absolute_time();
+            navegar_menu();
+            mostrar_menu();
+        }
+    }
 }
 
 
 
-void mostrar_umidade() {
-    exibir_mensagem("Umidade:", "65%");
-}
-
-
-void mostrar_posicao() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Latitude: -23.5", 10, 20);
-    ssd1306_draw_string(&ssd, "Longitude: -46.6", 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-}
-
-void mostrar_mensagens() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Sem mensagens", 10, 20);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-}
-
-void configurar_sistema() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Config. Sistema", 10, 20);
-    ssd1306_draw_string(&ssd, "Ajustes feitos", 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-}
-
-void mostrar_informacoes() {
-    ssd1306_fill(&ssd, false);
-    ssd1306_draw_string(&ssd, "Info. Sistema", 10, 20);
-    ssd1306_draw_string(&ssd, "Versao 1.0", 10, 40);
-    ssd1306_send_data(&ssd);
-    sleep_ms(2000);
-
-}
 
